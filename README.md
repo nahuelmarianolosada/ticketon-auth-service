@@ -28,7 +28,7 @@ Before running the project, ensure you have the following installed:
 git clone [https://github.com/yourusername/ticketon-users-api.git](https://github.com/yourusername/ticketon-users-api.git)
 cd ticketon-users-api
 ```
-2. Environment Setup
+2. **Environment Setup**
 Create a .env file with the following environment variables:
 
 ```bash
@@ -43,7 +43,7 @@ JWT_SECRET=your-secret-key
 ```
 Make sure to replace your-secret-key with a strong secret key for JWT token signing.
 
-3. Docker Compose
+3. **Docker Compose**
 To build and start the services, run the following command:
 
 ```bash
@@ -52,81 +52,81 @@ docker-compose up --build
 ```
 This will spin up both the users-api and MySQL services. The API will be available at http://localhost:8080.
 
-4. Database Migration
+4. **Database Migration**
 The MySQL container will automatically initialize the database on startup. You can customize the database schema in your Go application if necessary.
 
-API Endpoints
+**API Endpoints**
 1. Register User
-Endpoint: POST /api/v1/register
+Endpoint: ```POST /api/v1/register```
 
 Description: Registers a new user by saving their details to the database.
 
 Request Body:
-json
-Copy code
+```json
 {
   "username": "johndoe",
   "password": "password123"
 }
+```
 Response:
-json
-Copy code
+```json
 {
   "message": "User registered successfully",
   "user_id": 1
 }
-2. Login User
-Endpoint: POST /api/v1/login
+```
+**2. Login User**
+Endpoint: ```POST /api/v1/login```
 
 Description: Authenticates the user and returns a JWT token.
 
 Request Body:
-json
-Copy code
+```json
 {
   "username": "johndoe",
   "password": "password123"
 }
+```
 Response:
-json
-Copy code
+```json
 {
   "token": "your-jwt-token-here"
 }
-3. Protected Route Example
-Endpoint: GET /api/v1/profile
+```
+**3. Protected Route Example**
+Endpoint: ```GET /api/v1/profile```
 
 Description: Retrieves the user's profile. This route is protected and requires a valid JWT token.
 
-Headers:
-http
-Copy code
+*Headers*:
+```http
 Authorization: Bearer your-jwt-token-here
-Response:
-json
-Copy code
+```
+*Response*:
+```json
 {
   "user_id": 1,
   "username": "johndoe"
 }
-JWT Token
+```
+**JWT Token**
 The API uses JWT tokens for user authentication. After a successful login, the API returns a token, which must be sent with every request to protected routes via the Authorization header:
 
-http
-Copy code
+```http
 Authorization: Bearer your-jwt-token-here
-Token Validation
+```
+*Token Validation*
 To validate a JWT token, the API decodes it using the JWT_SECRET and verifies its integrity. If the token is valid, access to the protected route is granted.
 
-Running Tests
+**Running Tests**
 If you've included unit tests or integration tests, you can run them using:
 
-bash
-Copy code
+```bash
 go test ./...
-Project Structure
-bash
-Copy code
+```
+
+**Project Structure**
+```bash
 .
 ├── Dockerfile
 ├── docker-compose.yml
@@ -139,5 +139,7 @@ Copy code
 │   ├── middlewares        # JWT and other middleware
 │   └── config             # Database and app configuration
 └── README.md
-License
+```
+
+**License**
 This project is licensed under the MIT License - see the LICENSE file for details.
