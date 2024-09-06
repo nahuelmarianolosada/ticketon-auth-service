@@ -1,0 +1,12 @@
+# Ignore Docker volumes
+/var/lib/mysql
+/ticketon-users-data
+
+# Ignore .env file
+.env
+
+# Node.js dependencies (if any)
+node_modules/
+
+# Ignore build artifacts
+/dist

@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  users-api:
+    build:
+     context: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: "ticketon-users-db"
+      DB_USER: "dbuser"
+      DB_PASSWORD: "dbpasswd"
+      DB_NAME: "ticketon_users_db"
+      DB_PORT: 3306
+    depends_on:
+      ticketon-users-db:
+        condition: service_healthy
+    networks:
+      - ticketon_network
+
+  ticketon-users-db:
+    container_name: ticketon-users-db
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ticketon_users_db
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbpasswd
+      MYSQL_ROOT_PASSWORD: rootpasswd
+    healthcheck:
+      test: ["CMD", "mysql", "-uroot", "-prootpasswd", "-e", "SHOW DATABASES;"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ticketon-users-data:/var/lib/mysql
+    networks:
+      - ticketon_network
+
+networks:
+  ticketon_network:
+    driver: bridge
+volumes:
+  ticketon-users-data:
