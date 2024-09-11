@@ -4,9 +4,10 @@ import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"time"
+	"os"
 )
 
-var jwtKey = []byte("supersecretkey")
+var jwtKey = []byte(os.Getenv("JWT_SK"))
 
 type JWTClaim struct {
 	Username string `json:"username"`
@@ -27,6 +28,7 @@ func GenerateJWT(email string, username string) (tokenString string, err error) 
 	tokenString, err = token.SignedString(jwtKey)
 	return
 }
+
 func ValidateToken(signedToken string) (err error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,

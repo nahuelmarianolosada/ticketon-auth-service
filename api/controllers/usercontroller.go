@@ -1,29 +1,30 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"strconv"
 	"ticketon-auth-service/api/middlewares/auth"
 	"ticketon-auth-service/api/model"
 	"ticketon-auth-service/api/repository"
 	accountRepo "ticketon-auth-service/api/repository/account"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
-func RegisterUser(context *gin.Context) {
-	var user model.User
+func RegisterUser(c *gin.Context) {
+	var user model.CreateUserRequest
 	newDefaultAccount := model.Account{AvailableAmount: "0"}
-	if err := context.ShouldBindJSON(&user); err != nil {
-		context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	if err := user.HashPassword(user.Password); err != nil {
-		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	record := repository.DB.Create(&user)
+	record := repository.DB.Create(user)
 	if record.Error != nil {
-		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": record.Error.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": record.Error.Error()})
 		return
 	}
 
@@ -31,11 +32,11 @@ func RegisterUser(context *gin.Context) {
 
 	accountCreated, err := accountRepo.Create(newDefaultAccount)
 	if err != nil {
-		context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error})
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"user_id": user.ID, "account_id": accountCreated.ID, "email": user.Email})
+	c.JSON(http.StatusCreated, gin.H{"user_id": user.ID, "account_id": accountCreated.ID, "email": user.Email})
 }
 
 func GetUserIDFromJWT(c *gin.Context) *int {

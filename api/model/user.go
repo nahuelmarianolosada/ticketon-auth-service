@@ -7,12 +7,23 @@ import (
 
 type User struct {
 	gorm.Model
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Dni       int    `json:"dni"`
-	Email     string `json:"email" gorm:"unique"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
+	FirstName string `json:"firstname" binding:"required"`
+	LastName  string `json:"lastname" binding:"required"`
+	Dni       int    `json:"dni" binding:"required"`
+	Email     string `json:"email" gorm:"unique" binding:"required,email"`
+	Password  string `json:"password" binding:"required"`
+	Phone     string `json:"phone" binding:"required"`
+}
+
+// DTO for binding JSON and validation
+type CreateUserRequest struct {
+	ID        uint   `json:"id"`
+	FirstName string `json:"firstname" binding:"required"`
+	LastName  string `json:"lastname" binding:"required"`
+	Dni       int    `json:"dni" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Password  string `json:"password" binding:"required"`
+	Phone     string `json:"phone" binding:"required"`
 }
 
 func (user *User) HashPassword(password string) error {
@@ -28,5 +39,14 @@ func (user *User) CheckPassword(providedPassword string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (user *CreateUserRequest) HashPassword(password string) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return err
+	}
+	user.Password = string(bytes)
 	return nil
 }

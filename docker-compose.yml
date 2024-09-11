@@ -1,16 +1,20 @@
-version: '3.8'
 services:
   users-api:
     build:
      context: .
     ports:
       - "8080:8080"
+      - "2345:2345"
+    security_opt:
+      - "apparmor=unconfined"
+    cap_add:
+      - SYS_PTRACE
     environment:
-      DB_HOST: "ticketon-users-db"
-      DB_USER: "dbuser"
-      DB_PASSWORD: "dbpasswd"
-      DB_NAME: "ticketon_users_db"
-      DB_PORT: 3306
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
     depends_on:
       ticketon-users-db:
         condition: service_healthy
