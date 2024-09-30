@@ -15,16 +15,16 @@ func RegisterUser(c *gin.Context) {
 	newDefaultAccount := model.Account{AvailableAmount: "0"}
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: err.Error()})
 		return
 	}
 	if err := user.HashPassword(user.Password); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
 		return
 	}
 	record := repository.DB.Create(user)
 	if record.Error != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": record.Error.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
 		return
 	}
 
@@ -32,7 +32,7 @@ func RegisterUser(c *gin.Context) {
 
 	accountCreated, err := accountRepo.Create(newDefaultAccount)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
 		return
 	}
 
@@ -42,25 +42,25 @@ func RegisterUser(c *gin.Context) {
 func GetUserIDFromJWT(c *gin.Context) *int {
 	tokenString := c.GetHeader("Authorization")
 	if tokenString == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, model.ApiError{Message: "request does not contain an access token"})
 		return nil
 	}
 
 	claims, err := auth.GetClaims(tokenString)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, model.ApiError{Message: err.Error()})
 		return nil
 	}
 
 	userID := claims.Username
 	if userID == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user_id is required"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, model.ApiError{Message: "user_id is required"})
 		return nil
 	}
 
 	userIdInt, err := strconv.Atoi(userID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user_id is not a number"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "user_id is not a number"})
 		return nil
 	}
 
