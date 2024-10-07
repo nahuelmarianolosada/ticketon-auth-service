@@ -24,6 +24,8 @@ type CreateUserRequest struct {
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required"`
 	Phone     string `json:"phone" binding:"required"`
+
+	HashPasswordFunc func(password string) error `json:"-"`
 }
 
 func (user *User) HashPassword(password string) error {

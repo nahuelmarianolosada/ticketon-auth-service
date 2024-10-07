@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"ticketon-auth-service/api/controllers"
 	"ticketon-auth-service/api/middlewares"
+	"ticketon-auth-service/api/middlewares/auth"
 	"ticketon-auth-service/api/repository"
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -23,15 +24,15 @@ func initRouter() *gin.Engine {
 	{
 		api.POST("/login", controllers.GenerateToken)
 
-		apiUser := api.Group("/users") 
+		apiUser := api.Group("/users")
 		{
 			apiUser.POST("", controllers.RegisterUser)
-			apiUser.PUT("/:id", controllers.Ping).Use(middlewares.Auth())
+			apiUser.PUT("/:id", controllers.Ping).Use(middlewares.Auth(auth.ValidateToken))
 		}
 
 		accountApi := api.Group("/account")
 		{
-			accountApi.GET("", controllers.FindAccount).Use(middlewares.Auth())
+			accountApi.GET("", controllers.FindAccount).Use(middlewares.Auth(auth.ValidateToken))
 		}
 
 	}

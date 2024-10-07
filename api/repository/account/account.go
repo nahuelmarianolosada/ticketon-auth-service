@@ -1,12 +1,32 @@
 package account
 
 import (
-	"ticketon-auth-service/api/model"
-	"ticketon-auth-service/api/repository"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"ticketon-auth-service/api/model"
+	"ticketon-auth-service/api/repository"
 )
+
+// DBInterface defines the methods that the repository uses.
+type DBInterface interface {
+	Create(account model.Account) (*model.Account, error)
+}
+
+// Production DB that uses gorm
+var DB DBInterface = &gormDB{}
+
+type gormDB struct {
+	*gorm.DB
+}
+
+func (db *gormDB) Create(account model.Account) (*model.Account, error) {
+	tx := repository.DB.Create(&account)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return &account, nil
+}
 
 func GetByID(accountID int) (*model.Account, error) {
 	var account model.Account
@@ -50,10 +70,10 @@ func GetByAliasCvu(alias, cvu string) (*model.Account, error) {
 	return &account, nil
 }
 
-func Create(account model.Account) (*model.Account, error) {
-	tx := repository.DB.Create(&account)
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-	return &account, nil
-}
+//func Create(account model.Account) (*model.Account, error) {
+//	tx := repository.DB.Create(&account)
+//	if tx.Error != nil {
+//		return nil, tx.Error
+//	}
+//	return &account, nil
+//}
