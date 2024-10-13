@@ -71,7 +71,7 @@ func RegisterUser(c *gin.Context) {
 		Phone:     user.Phone,
 	}
 
-	record := userRepo.DB.Create(userToCreate)
+	record := userRepo.DB.Create(&userToCreate)
 	if record.Error != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
 		return

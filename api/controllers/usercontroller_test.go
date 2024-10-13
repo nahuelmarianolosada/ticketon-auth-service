@@ -102,7 +102,7 @@ func TestRegisterUser(t *testing.T) {
 
 		// Mock the DB to successfully create the user
 		mockDB := new(MockDB)
-		mockDB.On("Create", mock.AnythingOfType("model.User")).Return(nil)
+		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(nil)
 
 		// Mock Account Repo to simulate a failure during account creation
 		mockAccountRepo := new(MockAccountRepo)
@@ -143,7 +143,7 @@ func TestRegisterUser(t *testing.T) {
 		mockAccountRepo := new(MockAccountRepo)
 
 		// Mocking DB and Account creation
-		mockDB.On("Create", mock.AnythingOfType("model.User")).Return(nil)
+		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(nil)
 		mockAccountRepo.On("Create", mock.AnythingOfType("model.Account")).Return(&model.Account{
 			Model: gorm.Model{
 				ID:        1,
