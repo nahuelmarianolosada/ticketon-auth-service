@@ -57,22 +57,27 @@ The MySQL container will automatically initialize the database on startup. You c
 
 **API Endpoints**
 1. Register User
-Endpoint: ```POST /api/v1/register```
+Endpoint: ```POST /api/users```
 
 Description: Registers a new user by saving their details to the database.
 
 Request Body:
 ```json
 {
-  "username": "johndoe",
-  "password": "password123"
+  "firstname": "Joey",
+  "lastname": "Ramone",
+  "dni": 12345678,
+  "email": "joeyramone@gmail.com",
+  "password": "pass",
+  "phone": "54388134920"
 }
 ```
 Response:
 ```json
 {
-  "message": "User registered successfully",
-  "user_id": 1
+  "account_id": 2,
+  "email": "joeyramone@gmail.com",
+  "user_id": 0
 }
 ```
 **2. Login User**

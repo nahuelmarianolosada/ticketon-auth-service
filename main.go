@@ -27,7 +27,7 @@ func initRouter() *gin.Engine {
 		apiUser := api.Group("/users")
 		{
 			apiUser.POST("", controllers.RegisterUser)
-			apiUser.PUT("/:id", controllers.Ping).Use(middlewares.Auth(auth.ValidateToken))
+			apiUser.PUT("/:id", controllers.UpdateUser).Use(middlewares.Auth(auth.ValidateToken))
 		}
 
 		accountApi := api.Group("/account")
