@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"ticketon-auth-service/api/controllers"
-	"ticketon-auth-service/api/middlewares"
 	"ticketon-auth-service/api/middlewares/auth"
 	"ticketon-auth-service/api/repository"
 )
@@ -27,12 +26,12 @@ func initRouter() *gin.Engine {
 		apiUser := api.Group("/users")
 		{
 			apiUser.POST("", controllers.RegisterUser)
-			apiUser.PUT("/:id", controllers.UpdateUser).Use(middlewares.Auth(auth.ValidateToken))
+			apiUser.PUT("/:id", auth.AuthMiddleware(), controllers.UpdateUser)
 		}
 
 		accountApi := api.Group("/account")
 		{
-			accountApi.GET("", controllers.FindAccount).Use(middlewares.Auth(auth.ValidateToken))
+			accountApi.GET("", auth.AuthMiddleware(), controllers.FindAccount)
 		}
 
 	}

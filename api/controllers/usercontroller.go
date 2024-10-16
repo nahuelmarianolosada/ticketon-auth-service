@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -74,11 +75,19 @@ func RegisterUser(c *gin.Context) {
 
 	record := userRepo.DB.Create(&userToCreate)
 	if record.Error != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(record.Error, &mysqlErr) {
+			// Check if it's a duplicate entry error (error code 1062)
+			if mysqlErr.Number == 1062 {
+				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "Email already exists"})
+				return
+			}
+		}
 		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
 		return
 	}
 
-	newDefaultAccount.UserID = user.ID
+	newDefaultAccount.UserID = userToCreate.ID
 
 	accountCreated, err := accountRepo.DB.Create(newDefaultAccount)
 	if err != nil {
@@ -94,7 +103,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user_id": user.ID, "account_id": accountCreated.ID, "email": user.Email})
+	c.JSON(http.StatusCreated, gin.H{"user_id": userToCreate.ID, "account_id": accountCreated.ID, "email": user.Email})
 }
 
 func UpdateUser(c *gin.Context) {

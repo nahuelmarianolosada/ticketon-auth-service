@@ -3,8 +3,11 @@ package auth
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"time"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SK"))
@@ -29,28 +32,57 @@ func GenerateJWT(email string, username string) (tokenString string, err error) 
 	return
 }
 
-func ValidateToken(signedToken string) (err error) {
-	token, err := jwt.ParseWithClaims(
-		signedToken,
-		&JWTClaim{},
-		func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtKey), nil
-		},
-	)
+// Separate function for validating the token
+func ValidateToken(tokenString string) error {
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
 	if err != nil {
-		return
+		return err
 	}
+
 	claims, ok := token.Claims.(*JWTClaim)
-	if !ok {
-		err = errors.New("couldn't parse claims")
-		return
+	if !ok || !token.Valid {
+		return errors.New("invalid token")
 	}
-	if claims.ExpiresAt < time.Now().Local().Unix() {
-		err = errors.New("token expired")
-		return
+
+	// Check expiration
+	if claims.ExpiresAt < time.Now().Unix() {
+		return errors.New("token is expired")
 	}
-	return
+
+	return nil
 }
+
+// Middleware function that uses the ValidateToken function
+func AuthMiddleware() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		tokenString := context.GetHeader("Authorization")
+
+		// Check if the token is provided and is in "Bearer <token>" format
+		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
+			context.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain a valid access token"})
+			context.Abort()
+			return
+		}
+
+		// Extract the token part from "Bearer <token>"
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+		// Validate the token
+		err := ValidateToken(tokenString)
+		if err != nil {
+			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			context.Abort()
+			return
+		}
+
+		// Proceed to the next handler
+		context.Next()
+	}
+}
+
 func GetClaims(signedToken string) (jwtClaim *JWTClaim, err error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
