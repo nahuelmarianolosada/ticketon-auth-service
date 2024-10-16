@@ -8,13 +8,13 @@ import (
 	"ticketon-auth-service/api/repository"
 )
 
-// DBInterface defines the methods that the repository uses.
-type DBInterface interface {
+// AccountRepository defines the methods that the repository uses.
+type AccountRepository interface {
 	Create(account model.Account) (*model.Account, error)
 }
 
 // Production DB that uses gorm
-var DB DBInterface = &gormDB{}
+var DB AccountRepository = &gormDB{}
 
 type gormDB struct {
 	*gorm.DB

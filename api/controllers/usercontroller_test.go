@@ -11,53 +11,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"ticketon-auth-service/api/mocks"
 	"ticketon-auth-service/api/model"
 	accountRepo "ticketon-auth-service/api/repository/account"
 	userRepo "ticketon-auth-service/api/repository/user"
 	"time"
 )
-
-// Mock dependencies
-type MockDB struct {
-	mock.Mock
-}
-
-type MockAccountRepo struct {
-	mock.Mock
-}
-
-type MockUserHash struct {
-	mock.Mock
-}
-
-// Mock for DB Create method
-func (m *MockDB) Create(value interface{}) *gorm.DB {
-	args := m.Called(value)
-	return &gorm.DB{
-		Error: args.Error(0),
-	}
-}
-
-// Mock for accountRepo.Create method
-func (m *MockAccountRepo) Create(account model.Account) (*model.Account, error) {
-	args := m.Called(account)
-
-	// Safely handle nil value for the returned account
-	if args.Get(0) != nil {
-		return args.Get(0).(*model.Account), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockUserHash) HashPassword(pass string) error {
-	args := m.Called(pass)
-
-	// Safely handle nil value for the returned account
-	if args.Get(0) != nil {
-		return args.Error(1)
-	}
-	return args.Error(1)
-}
 
 func TestRegisterUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -66,9 +25,9 @@ func TestRegisterUser(t *testing.T) {
 		// Prepare an invalid request body (missing required fields, incorrect JSON format, etc.)
 		invalidRequestBody := `{"invalidField": "invalidValue"}`
 
-		// Mock the DB and Account Repo, but they won't be called in this case
-		mockDB := new(MockDB)
-		mockAccountRepo := new(MockAccountRepo)
+		// Use the mockery-generated mocks
+		mockDB := new(mocks.UserRepository)
+		mockAccountRepo := new(mocks.AccountRepository)
 
 		// Inject the mock DB into the repository
 		userRepo.DB = mockDB
@@ -100,12 +59,14 @@ func TestRegisterUser(t *testing.T) {
 			Phone:     "+1234567890",
 		}
 
+		// Use mockery-generated mocks
+		mockDB := new(mocks.UserRepository)
+		mockAccountRepo := new(mocks.AccountRepository)
+
 		// Mock the DB to successfully create the user
-		mockDB := new(MockDB)
-		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(nil)
+		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(&gorm.DB{})
 
 		// Mock Account Repo to simulate a failure during account creation
-		mockAccountRepo := new(MockAccountRepo)
 		mockAccountRepo.On("Create", mock.AnythingOfType("model.Account")).Return(nil, errors.New("account create error"))
 
 		// Inject the mock DB into the repository
@@ -139,11 +100,12 @@ func TestRegisterUser(t *testing.T) {
 			Phone:     "+1234567890",
 		}
 
-		mockDB := new(MockDB)
-		mockAccountRepo := new(MockAccountRepo)
+		// Use mockery-generated mocks
+		mockDB := new(mocks.UserRepository)
+		mockAccountRepo := new(mocks.AccountRepository)
 
 		// Mocking DB and Account creation
-		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(nil)
+		mockDB.On("Create", mock.AnythingOfType("*model.User")).Return(&gorm.DB{})
 		mockAccountRepo.On("Create", mock.AnythingOfType("model.Account")).Return(&model.Account{
 			Model: gorm.Model{
 				ID:        1,
@@ -151,9 +113,7 @@ func TestRegisterUser(t *testing.T) {
 				UpdatedAt: time.Now(),
 			},
 			UserID:          1,
-			Cvu:             nil,
-			Alias:           nil,
-			AvailableAmount: "",
+			AvailableAmount: "0",
 		}, nil)
 
 		// Inject the mock DB into repository
