@@ -5,6 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type IUser interface {
+	HashPassword(password string) error
+	CheckPassword(providedPassword string) error
+}
+
 type User struct {
 	gorm.Model
 	FirstName string `json:"firstname" binding:"required"`
