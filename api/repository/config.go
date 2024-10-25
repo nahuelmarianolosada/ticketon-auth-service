@@ -72,7 +72,7 @@ func Connect() {
 }
 
 func Migrate() {
-	err := DB.AutoMigrate(&model.User{}, &model.Account{})
+	err := DB.AutoMigrate(&model.User{}, &model.Account{}, &model.EventBasic{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}

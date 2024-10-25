@@ -11,3 +11,7 @@ type Account struct {
 	Alias           *string `json:"alias"`
 	AvailableAmount string  `json:"available_amount"`
 }
+
+func (a Account) TableName() string {
+	return "account"
+}

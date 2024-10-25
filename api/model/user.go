@@ -20,6 +20,10 @@ type User struct {
 	Phone     string `json:"phone" binding:"required"`
 }
 
+func (user User) TableName() string {
+	return "user"
+}
+
 // DTO for binding JSON and validation
 type CreateUserRequest struct {
 	ID        uint   `json:"id"`
