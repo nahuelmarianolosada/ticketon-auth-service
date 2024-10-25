@@ -29,9 +29,16 @@ func initRouter() *gin.Engine {
 			apiUser.PUT("/:id", auth.AuthMiddleware(), controllers.UpdateUser)
 		}
 
-		accountApi := api.Group("/account")
+		accountApi := api.Group("/accounts")
 		{
 			accountApi.GET("", auth.AuthMiddleware(), controllers.FindAccount)
+		}
+
+		eventApi := api.Group("/events")
+		{
+			eventApi.POST("", auth.AuthMiddleware(), controllers.CreateEvent)
+			eventApi.GET("/:id", auth.AuthMiddleware(), controllers.GetEvent)
+			eventApi.PUT("/:id", auth.AuthMiddleware(), controllers.UpdateEvent)
 		}
 
 	}
