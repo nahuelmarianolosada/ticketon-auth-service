@@ -19,7 +19,7 @@ COPY . .
 RUN go mod tidy
 
 # Install Delve for debugging
-#RUN go install github.com/go-delve/delve/cmd/dlv@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 # Build the Go project
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o /ticketon-auth-service .
@@ -35,11 +35,11 @@ COPY --from=builder /ticketon-auth-service /ticketon-auth-service
 COPY --from=builder /build/.env.example /.env
 
 # Copy Delve debugger from the builder stage
-#COPY --from=builder /go/bin/dlv /usr/local/bin/dlv
+COPY --from=builder /go/bin/dlv /usr/local/bin/dlv
 
 # Expose port for Delve debugger
-#EXPOSE 2345
+EXPOSE 2345
 
 # Start the app with Delve debugger for remote debugging
-#ENTRYPOINT ["dlv", "exec", "/ticketon-auth-service", "--headless", "--listen=:2345", "--api-version=2", "--log"]
-ENTRYPOINT ["./ticketon-auth-service"]
+ENTRYPOINT ["dlv", "exec", "/ticketon-auth-service", "--headless", "--listen=:2345", "--api-version=2", "--log"]
+#ENTRYPOINT ["./ticketon-auth-service"]

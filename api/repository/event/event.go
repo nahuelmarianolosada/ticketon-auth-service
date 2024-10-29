@@ -10,10 +10,11 @@ import (
 
 // EventRepository defines the methods that the repository uses.
 type EventRepository interface {
-	Create(value interface{}) *gorm.DB
-	Save(value interface{}) *gorm.DB
-	Update(value interface{}) *gorm.DB
+	Create(value model.EventBasic) *gorm.DB
+	Save(value model.EventBasic) *gorm.DB
+	Update(value model.EventBasic) *gorm.DB
 	First(value string) (*model.EventBasic, error)
+	Delete(value model.EventBasic) *gorm.DB
 }
 
 // Production DB that uses gorm
@@ -23,19 +24,16 @@ type gormDB struct {
 	*gorm.DB
 }
 
-func (db *gormDB) Create(value interface{}) *gorm.DB {
-	return repository.DB.Create(value)
+func (db *gormDB) Create(value model.EventBasic) *gorm.DB {
+	return repository.DB.Create(&value)
 }
 
-func (db *gormDB) Save(value interface{}) *gorm.DB {
-	return repository.DB.Save(value)
+func (db *gormDB) Save(value model.EventBasic) *gorm.DB {
+	return repository.DB.Save(&value)
 }
 
-func (db *gormDB) Update(value interface{}) *gorm.DB {
-	if evt, ok := value.(*model.EventBasic); ok {
-		return repository.DB.Where("id = ?", evt.ID).Updates(value)
-	}
-	return repository.DB.Where("id = ?").Updates(value)
+func (db *gormDB) Update(value model.EventBasic) *gorm.DB {
+	return repository.DB.Where("id = ?", value.ID).Updates(&value)
 }
 
 func (db *gormDB) First(value string) (*model.EventBasic, error) {
@@ -57,4 +55,8 @@ func (db *gormDB) First(value string) (*model.EventBasic, error) {
 
 	// Return the found Event and nil error
 	return &existingEvent, nil
+}
+
+func (db *gormDB) Delete(value model.EventBasic) *gorm.DB {
+	return repository.DB.Delete(&value, "id = ?", value.ID)
 }

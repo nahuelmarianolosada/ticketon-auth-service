@@ -39,6 +39,7 @@ func initRouter() *gin.Engine {
 			eventApi.POST("", auth.AuthMiddleware(), controllers.CreateEvent)
 			eventApi.GET("/:id", auth.AuthMiddleware(), controllers.GetEvent)
 			eventApi.PUT("/:id", auth.AuthMiddleware(), controllers.UpdateEvent)
+			eventApi.DELETE("/:id", auth.AuthMiddleware(), controllers.DeleteEvent)
 		}
 
 	}

@@ -39,6 +39,12 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "user_id missing in jwt"})
+		return
+	}
+
 	evtToCreate := model.EventBasic{
 		Model: gorm.Model{
 			CreatedAt: time.Now(),
@@ -48,24 +54,29 @@ func CreateEvent(c *gin.Context) {
 		EndDate:   evtReq.EndDate,
 		Capacity:  evtReq.Capacity,
 		Location: model.LocationEvent{
-			Latitude:  evtReq.Location.Latitude,
-			Longitude: evtReq.Location.Longitude,
-			Name:      evtReq.Location.Name,
+			Latitude:     evtReq.Location.Latitude,
+			Longitude:    evtReq.Location.Longitude,
+			LocationName: evtReq.Location.LocationName,
 		},
+		UserID: uint(userID.(int)),
 	}
 
-	record := evtRepo.DB.Create(&evtToCreate)
+	record := evtRepo.DB.Create(evtToCreate)
 	if record.Error != nil {
 		var mysqlErr *mysql.MySQLError
 		if errors.As(record.Error, &mysqlErr) {
 			// Check if it's a duplicate entry error (error code 1062)
 			if mysqlErr.Number == 1062 {
-				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "Email already exists"})
+				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "event already exists"})
 				return
 			}
 		}
 		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
 		return
+	}
+
+	if evtCreated, ok := record.Statement.Model.(*model.EventBasic); ok {
+		evtToCreate.ID = evtCreated.ID
 	}
 
 	c.JSON(http.StatusCreated, evtToCreate)
@@ -95,18 +106,43 @@ func UpdateEvent(c *gin.Context) {
 		EndDate:   updatedEvtData.EndDate,
 		Capacity:  updatedEvtData.Capacity,
 		Location: model.LocationEvent{
-			Latitude:  updatedEvtData.Location.Latitude,
-			Longitude: updatedEvtData.Location.Longitude,
-			Name:      updatedEvtData.Location.Name,
+			Latitude:     updatedEvtData.Location.Latitude,
+			Longitude:    updatedEvtData.Location.Longitude,
+			LocationName: updatedEvtData.Location.LocationName,
 		},
 	}
 
 	// Save the updated user to the database
-	if err := evtRepo.DB.Update(&existingEvt).Error; err != nil {
+	if err := evtRepo.DB.Update(existingEvt).Error; err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
 		return
 	}
 
 	// Return the updated user data in the response
 	c.JSON(http.StatusOK, existingEvt)
+}
+
+func DeleteEvent(c *gin.Context) {
+	eventID := c.Param("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "id is required"})
+		return
+	}
+
+	evtFound, err := evtRepo.DB.First(eventID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.AbortWithStatusJSON(http.StatusNotFound, model.ApiError{Message: err.Error()})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
+		return
+	}
+
+	gormResp := evtRepo.DB.Delete(*evtFound)
+	if gormResp.Error != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: gormResp.Error.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{})
 }

@@ -1,5 +1,5 @@
 services:
-  users-api:
+  ticketon-api:
     build:
      context: .
     ports:
@@ -16,16 +16,16 @@ services:
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
     depends_on:
-      ticketon-users-db:
+      ticketon-db:
         condition: service_healthy
     networks:
       - ticketon_network
 
-  ticketon-users-db:
-    container_name: ticketon-users-db
+  ticketon-db:
+    container_name: ticketon-db
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: ticketon_users_db
+      MYSQL_DATABASE: ticketon_db
       MYSQL_USER: dbuser
       MYSQL_PASSWORD: dbpasswd
       MYSQL_ROOT_PASSWORD: rootpasswd
@@ -35,7 +35,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ticketon-users-data:/var/lib/mysql
+      - ticketon-db-data:/var/lib/mysql
     networks:
       - ticketon_network
 
@@ -43,4 +43,4 @@ networks:
   ticketon_network:
     driver: bridge
 volumes:
-  ticketon-users-data:
+  ticketon-db-data:

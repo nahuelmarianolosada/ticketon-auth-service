@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -33,26 +34,26 @@ func GenerateJWT(email string, username string) (tokenString string, err error) 
 }
 
 // Separate function for validating the token
-func ValidateToken(tokenString string) error {
+func ValidateToken(tokenString string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	claims, ok := token.Claims.(*JWTClaim)
 	if !ok || !token.Valid {
-		return errors.New("invalid token")
+		return "", errors.New("invalid token")
 	}
 
 	// Check expiration
 	if claims.ExpiresAt < time.Now().Unix() {
-		return errors.New("token is expired")
+		return "", errors.New("token is expired")
 	}
 
-	return nil
+	return claims.Username, nil
 }
 
 // Middleware function that uses the ValidateToken function
@@ -71,12 +72,20 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 		// Validate the token
-		err := ValidateToken(tokenString)
+		userIdStr, err := ValidateToken(tokenString)
 		if err != nil {
 			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			context.Abort()
 			return
 		}
+
+		// Store user_id in the context
+		userID, err := strconv.Atoi(userIdStr)
+		if err != nil {
+			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			context.Abort()
+		}
+		context.Set("user_id", userID)
 
 		// Proceed to the next handler
 		context.Next()
