@@ -61,3 +61,9 @@ func (user *CreateUserRequest) HashPassword(password string) error {
 	user.Password = string(bytes)
 	return nil
 }
+
+type CreateUserResponse struct {
+	UserID    uint   `json:"user_id"`
+	AccountID uint   `json:"account_id"`
+	Email     string `json:"email"`
+}

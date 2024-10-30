@@ -4,14 +4,14 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
-	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 	"ticketon-auth-service/api/middlewares/auth"
 	"ticketon-auth-service/api/model"
 	accountRepo "ticketon-auth-service/api/repository/account"
 	userRepo "ticketon-auth-service/api/repository/user"
-	"time"
+	accountService "ticketon-auth-service/api/services/account"
+	userService "ticketon-auth-service/api/services/user"
 )
 
 func GetUserIDFromJWT(c *gin.Context) *int {
@@ -61,49 +61,36 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	userToCreate := model.User{
-		Model: gorm.Model{
-			CreatedAt: time.Now(),
-		},
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Dni:       user.Dni,
-		Email:     user.Email,
-		Password:  user.Password,
-		Phone:     user.Phone,
-	}
-
-	record := userRepo.DB.Create(&userToCreate)
-	if record.Error != nil {
+	userCreated, err := userService.CreateUser(c, user)
+	if err != nil {
 		var mysqlErr *mysql.MySQLError
-		if errors.As(record.Error, &mysqlErr) {
+		if errors.As(err, &mysqlErr) {
 			// Check if it's a duplicate entry error (error code 1062)
 			if mysqlErr.Number == 1062 {
 				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "Email already exists"})
 				return
 			}
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
-		return
-	}
-
-	newDefaultAccount.UserID = userToCreate.ID
-
-	accountCreated, err := accountRepo.DB.Create(newDefaultAccount)
-	if err != nil {
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
-			// 1062 is the error code for a duplicate entry
-			c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{
-				Message: "A user with this email already exists.",
-			})
-			return
-		}
-
 		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user_id": userToCreate.ID, "account_id": accountCreated.ID, "email": user.Email})
+	accountService.CreateAccount(c, userCreated.UserID)
+	accountCreated, err := accountRepo.DB.Create(newDefaultAccount)
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) {
+			// Check if it's a duplicate entry error (error code 1062)
+			if mysqlErr.Number == 1062 {
+				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "Email already exists"})
+				return
+			}
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"user_id": userCreated.UserID, "account_id": accountCreated.ID, "email": user.Email})
 }
 
 func UpdateUser(c *gin.Context) {

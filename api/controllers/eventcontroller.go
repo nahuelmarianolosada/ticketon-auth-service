@@ -4,12 +4,11 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
 	"ticketon-auth-service/api/model"
 	evtRepo "ticketon-auth-service/api/repository/event"
-	"time"
+	evtService "ticketon-auth-service/api/services/event"
 )
 
 func GetEvent(c *gin.Context) {
@@ -51,41 +50,21 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
-	evtToCreate := model.EventBasic{
-		Model: gorm.Model{
-			CreatedAt: time.Now(),
-		},
-		Name:      evtReq.Name,
-		StartDate: evtReq.StartDate,
-		EndDate:   evtReq.EndDate,
-		Capacity:  evtReq.Capacity,
-		Location: model.LocationEvent{
-			Latitude:     evtReq.Location.Latitude,
-			Longitude:    evtReq.Location.Longitude,
-			LocationName: evtReq.Location.LocationName,
-		},
-		UserID: uint(userID.(int)),
-	}
-
-	record := evtRepo.DB.Create(evtToCreate)
-	if record.Error != nil {
+	evtCreated, err := evtService.CreateEvent(c, evtReq, userID)
+	if err != nil {
 		var mysqlErr *mysql.MySQLError
-		if errors.As(record.Error, &mysqlErr) {
+		if errors.As(err, &mysqlErr) {
 			// Check if it's a duplicate entry error (error code 1062)
 			if mysqlErr.Number == 1062 {
 				c.AbortWithStatusJSON(http.StatusConflict, model.ApiError{Message: "event already exists"})
 				return
 			}
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: record.Error.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, model.ApiError{Message: err.Error()})
 		return
 	}
 
-	if evtCreated, ok := record.Statement.Model.(*model.EventBasic); ok {
-		evtToCreate.ID = evtCreated.ID
-	}
-
-	c.JSON(http.StatusCreated, evtToCreate)
+	c.JSON(http.StatusCreated, evtCreated)
 }
 
 func UpdateEvent(c *gin.Context) {

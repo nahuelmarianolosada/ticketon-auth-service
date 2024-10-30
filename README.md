@@ -25,8 +25,8 @@ Before running the project, ensure you have the following installed:
 1. **Clone the Repository**
 
 ```bash
-git clone [https://github.com/yourusername/ticketon-users-api.git](https://github.com/yourusername/ticketon-users-api.git)
-cd ticketon-users-api
+git clone [https://github.com/nahuelmarianolosada/ticketon-auth-service](https://github.com/nahuelmarianolosada/ticketon-auth-service.git)
+cd ticketon-auth-service
 ```
 2. **Environment Setup**
 Create a .env file with the following environment variables:
