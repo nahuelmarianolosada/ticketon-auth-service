@@ -13,7 +13,7 @@ type EventRepository interface {
 	Create(value model.EventBasic) *gorm.DB
 	Save(value model.EventBasic) *gorm.DB
 	Update(value model.EventBasic) *gorm.DB
-	First(value string) (*model.EventBasic, error)
+	First(id string, user_id uint) (*model.EventBasic, error)
 	Delete(value model.EventBasic) *gorm.DB
 }
 
@@ -36,20 +36,19 @@ func (db *gormDB) Update(value model.EventBasic) *gorm.DB {
 	return repository.DB.Where("id = ?", value.ID).Updates(&value)
 }
 
-func (db *gormDB) First(value string) (*model.EventBasic, error) {
+func (db *gormDB) First(id string, userID uint) (*model.EventBasic, error) {
 	var existingEvent model.EventBasic
 
 	// Convert the string to an integer (EventID)
-	EventID, err := strconv.Atoi(value)
+	EventID, err := strconv.Atoi(id)
 	if err != nil {
 		// Return a descriptive error instead of nil
-		return nil, fmt.Errorf("invalid Event ID: %s", value)
+		return nil, fmt.Errorf("invalid Event ID: %s", id)
 	}
 
-	// Query the database for the Event with the given ID
-	result := repository.DB.First(&existingEvent, EventID)
+	// Query the database with both EventID and user_id as conditions
+	result := repository.DB.Where("id = ? AND user_id = ?", EventID, userID).First(&existingEvent)
 	if result.Error != nil {
-		// Return the database error if the Event is not found or any other error occurs
 		return nil, result.Error
 	}
 

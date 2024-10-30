@@ -19,7 +19,13 @@ func GetEvent(c *gin.Context) {
 		return
 	}
 
-	evtFound, err := evtRepo.DB.First(eventID)
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "user_id missing in token"})
+		return
+	}
+
+	evtFound, err := evtRepo.DB.First(eventID, uint(userID.(int)))
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.AbortWithStatusJSON(http.StatusNotFound, model.ApiError{Message: err.Error()})
@@ -87,7 +93,14 @@ func UpdateEvent(c *gin.Context) {
 	evtID := c.Param("id")
 
 	// Check if the user exists
-	if _, err := evtRepo.DB.First(evtID); err != nil {
+
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "user_id missing in token"})
+		return
+	}
+
+	if _, err := evtRepo.DB.First(evtID, uint(userID.(int))); err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, model.ApiError{Message: "Event not found. " + err.Error()})
 		return
 	}
@@ -129,7 +142,13 @@ func DeleteEvent(c *gin.Context) {
 		return
 	}
 
-	evtFound, err := evtRepo.DB.First(eventID)
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: "user_id missing in token"})
+		return
+	}
+
+	evtFound, err := evtRepo.DB.First(eventID, uint(userID.(int)))
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.AbortWithStatusJSON(http.StatusNotFound, model.ApiError{Message: err.Error()})
