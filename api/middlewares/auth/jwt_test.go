@@ -33,7 +33,7 @@ func TestValidateToken(t *testing.T) {
 	assert.NoError(t, err, "Expected no error while generating token")
 
 	// Test valid token
-	err = ValidateToken(tokenString)
+	_, err = ValidateToken(tokenString)
 	assert.NoError(t, err, "Expected no error while validating token")
 
 	// Test expired token by manipulating the token expiration time
@@ -47,7 +47,7 @@ func TestValidateToken(t *testing.T) {
 	expiredToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	expiredTokenString, _ := expiredToken.SignedString(jwtKey)
 
-	err = ValidateToken(expiredTokenString)
+	_, err = ValidateToken(expiredTokenString)
 	assert.Error(t, err, "Expected error for expired token")
 	assert.Equal(t, "token is expired by 1h0m0s", err.Error(), "Expected 'token expired' error")
 }
