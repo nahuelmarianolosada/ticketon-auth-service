@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"ticketon-auth-service/api/middlewares/auth"
 	"ticketon-auth-service/api/model"
-	accountRepo "ticketon-auth-service/api/repository/account"
 	userRepo "ticketon-auth-service/api/repository/user"
 	accountService "ticketon-auth-service/api/services/account"
 	userService "ticketon-auth-service/api/services/user"
@@ -44,7 +43,6 @@ func GetUserIDFromJWT(c *gin.Context) *int {
 
 func RegisterUser(c *gin.Context) {
 	var user model.CreateUserRequest
-	newDefaultAccount := model.Account{AvailableAmount: "0"}
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, model.ApiError{Message: err.Error()})
@@ -75,8 +73,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	accountService.CreateAccount(c, userCreated.UserID)
-	accountCreated, err := accountRepo.DB.Create(newDefaultAccount)
+	accountCreated, err := accountService.CreateAccount(c, userCreated.UserID)
 	if err != nil {
 		var mysqlErr *mysql.MySQLError
 		if errors.As(err, &mysqlErr) {
@@ -90,7 +87,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user_id": userCreated.UserID, "account_id": accountCreated.ID, "email": user.Email})
+	c.JSON(http.StatusCreated, model.CreateUserResponse{UserID: userCreated.UserID, AccountID: accountCreated.ID, Email: user.Email})
 }
 
 func UpdateUser(c *gin.Context) {

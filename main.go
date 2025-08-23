@@ -42,6 +42,12 @@ func initRouter() *gin.Engine {
 			eventApi.DELETE("/:id", auth.AuthMiddleware(), controllers.DeleteEvent)
 		}
 
+		ticketApi := api.Group("/tickets")
+		{
+			ticketApi.POST("", auth.AuthMiddleware(), controllers.BuyTicket)
+			ticketApi.POST("/qr/validate", auth.AuthMiddleware(), controllers.ValidateQR)
+		}
+
 	}
 	return router
 }
